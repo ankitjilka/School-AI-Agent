@@ -1,0 +1,1114 @@
+{
+  "name": "School-agent",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {
+          "messageStatusUpdates": []
+        }
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2352,
+        960
+      ],
+      "id": "06440e66-6831-459b-9272-eb3a55fe92d6",
+      "name": "WhatsApp Trigger",
+      "webhookId": "862a087c-4057-4438-9811-2f8e3051691c",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "uB4xTnhMngzMuv8I",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('WhatsApp Trigger').item.json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=You are a helpful AI assistant.\n\n\n\nIf the user asks about general school info (like fees, timings, principal, facilities, results, or teachers):\n  ALWAYS use the \"School Info\" tool.\n1. you can use Google doc tool which name is \"basic inquiry\" and its attached as AI tool\n\n\nWhen you return results:\n- Always format them neatly with bullet points or tables.\n- For lists of items (like fees, teachers, results), present them as a clear bullet list.\n- Expand short entries into natural sentences. For example:\n  - Instead of: \"1 to 3 → 1000\"\n  - Write: \"Standards 1 to 3: ₹1000 per month\"\n- For teachers, include subject and experience in a sentence:\n  \"Dinesh Bhandari – teaches Maths, with 20 years of experience.\"\n- For results, format as:\n  - \"10th Girls: 98%\"\n  - \"12th Science: 100%\"\n  etc."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -192,
+        1248
+      ],
+      "id": "cc04324d-f59c-42c5-a81f-4d0f661a1ca0",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        1744
+      ],
+      "id": "6912f13d-a35d-47d5-a7d5-43bdf52ed9ee",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3sv1XOzoTFsS3RvC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "contextWindowLength": 3
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        1808
+      ],
+      "id": "fcdb8ee4-eaae-4d2a-a33f-9324024dc873",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "={{ $('WhatsApp Trigger').item.json.metadata.phone_number_id }}",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        640,
+        1360
+      ],
+      "id": "b804ac56-6061-4194-a2ac-743928f9a500",
+      "name": "Send message",
+      "webhookId": "77248949-fe8d-4186-9b65-92b1b7d210a0",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "Zt92IoFUxtbuc3Go",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "This tool looks up school-related information such as fees, timings, principal, facilities, exam results, and teachers. \nAlways use this tool if the user asks about any of these topics.\n",
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/18XUojoRbkLh_Xt_uVaiX6a29s4MJYVcQxiUq0JT2Ukw/edit?usp=sharing"
+      },
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [
+        448,
+        1712
+      ],
+      "id": "75df5f34-16d4-4f74-919c-aafb41601fa4",
+      "name": "School Info",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "JLP0j5uh9nYJkwIo",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('WhatsApp Trigger').item.json.messages[0].text.body.toLowerCase() }}",
+                    "rightValue": "(homework|hw|lesson|lession|work)",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "bfa453db-70a4-468e-bfb6-d5961e76c764"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": "={{ false }}"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "bc6ec462-dbcb-40bf-b7c0-298edd8ff0a8",
+                    "leftValue": "={{ $('WhatsApp Trigger').item.json.messages[0].text.body.toLowerCase() }}",
+                    "rightValue": "(exam|exams|exm|test|paper|papers|unit\\s*test|ut|mid[\\s-]*term|prelim|mock\\s*test|half[\\s-]*yearly|final\\s*exam|board\\s*exam|timetable|time\\s*table|schedule|pariksha|pareeksha|parixa|પરીક્ષા)",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -464,
+        816
+      ],
+      "id": "43f63cb6-f530-4417-b91e-09b26c0992d9",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M",
+          "mode": "list",
+          "cachedResultName": "Students_data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "8",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Gt3Z1Rgtdi7BQE8qCB0f3gkpbAUSL1T4_BYfm-jw7QY/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "phno",
+              "lookupValue": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1120,
+        688
+      ],
+      "id": "2ae7defc-566d-4155-bf31-ee77ee4e67c8",
+      "name": "students_8th",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MBtmbrv0S4rEWPnl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M",
+          "mode": "list",
+          "cachedResultName": "Students_data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 564961239,
+          "mode": "list",
+          "cachedResultName": "9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M/edit#gid=564961239"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "phno",
+              "lookupValue": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1120,
+        960
+      ],
+      "id": "fbfd7547-c196-470c-8472-f0632dc64fec",
+      "name": "students_9th",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MBtmbrv0S4rEWPnl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M",
+          "mode": "list",
+          "cachedResultName": "Students_data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1032706326,
+          "mode": "list",
+          "cachedResultName": "10",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M/edit#gid=1032706326"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "phno",
+              "lookupValue": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1120,
+        1232
+      ],
+      "id": "01013f52-b01c-4136-b250-e5464786f93a",
+      "name": "students_10th",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MBtmbrv0S4rEWPnl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Gt3Z1Rgtdi7BQE8qCB0f3gkpbAUSL1T4_BYfm-jw7QY",
+          "mode": "list",
+          "cachedResultName": "school-agent",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Gt3Z1Rgtdi7BQE8qCB0f3gkpbAUSL1T4_BYfm-jw7QY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "8",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Gt3Z1Rgtdi7BQE8qCB0f3gkpbAUSL1T4_BYfm-jw7QY/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Date",
+              "lookupValue": "={{ $('Date&Time').item.json.formattedDate }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        0,
+        0
+      ],
+      "id": "dc80938c-8454-41a0-97e1-0dcfef59f095",
+      "name": "homework_8th",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MBtmbrv0S4rEWPnl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Gt3Z1Rgtdi7BQE8qCB0f3gkpbAUSL1T4_BYfm-jw7QY",
+          "mode": "list",
+          "cachedResultName": "school-agent",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Gt3Z1Rgtdi7BQE8qCB0f3gkpbAUSL1T4_BYfm-jw7QY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 969748424,
+          "mode": "list",
+          "cachedResultName": "9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Gt3Z1Rgtdi7BQE8qCB0f3gkpbAUSL1T4_BYfm-jw7QY/edit#gid=969748424"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Date",
+              "lookupValue": "={{ $('Date&Time').item.json.formattedDate }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        16,
+        224
+      ],
+      "id": "d53276e9-1395-489a-bc0f-d418d15f748c",
+      "name": "homework_9th",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MBtmbrv0S4rEWPnl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Gt3Z1Rgtdi7BQE8qCB0f3gkpbAUSL1T4_BYfm-jw7QY",
+          "mode": "list",
+          "cachedResultName": "school-agent",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Gt3Z1Rgtdi7BQE8qCB0f3gkpbAUSL1T4_BYfm-jw7QY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 499341087,
+          "mode": "list",
+          "cachedResultName": "10",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Gt3Z1Rgtdi7BQE8qCB0f3gkpbAUSL1T4_BYfm-jw7QY/edit#gid=499341087"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -192,
+        432
+      ],
+      "id": "cf75b219-8cb7-41b4-989a-bb30c1680864",
+      "name": "homework_10th",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MBtmbrv0S4rEWPnl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "919588327901763",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "=Dear student,\nYour homework for today {{ $('Date&Time').item.json.formattedDate }} is:\nSubject: {{ $json.Subject }}  \nHomework: {{ $json.homework }} \n\nKEEP LEARNING..",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        496,
+        192
+      ],
+      "id": "7194fec6-ea10-45e9-907e-0923d78cb974",
+      "name": "Send message to 8th",
+      "webhookId": "50fe546a-c389-49f6-bde2-f51aacd65861",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "Zt92IoFUxtbuc3Go",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $today }}",
+        "format": "custom",
+        "customFormat": "dd/MM/yyyy",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -1504,
+        976
+      ],
+      "id": "2665ba67-4c42-487e-867f-bec994dc5b14",
+      "name": "Date&Time"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.phno }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "number",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "09394eba-6af4-431c-9baa-8aa39ffbcc52"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "77539da3-8d2e-4b9f-8566-683939700931",
+                    "leftValue": "={{ $json.phno }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "number",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -304,
+        304
+      ],
+      "id": "ebef078d-6c1d-4892-85eb-2a6b9ecc0b76",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5acd71b2-8fb6-4cbc-bf5e-c62b3971ff2f",
+              "leftValue": "={{ $json.phno }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -752,
+        992
+      ],
+      "id": "560289e8-0356-4f87-8ad8-fcae1a4d086e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1jnk9BXw8rAJdbD7lcoqSUTPzUg4fnNUNvV-xPTQNxcI",
+          "mode": "list",
+          "cachedResultName": "students_exam",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jnk9BXw8rAJdbD7lcoqSUTPzUg4fnNUNvV-xPTQNxcI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "8",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jnk9BXw8rAJdbD7lcoqSUTPzUg4fnNUNvV-xPTQNxcI/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        592
+      ],
+      "id": "b3d0bab4-a78b-4b0f-b0fc-cc6783541499",
+      "name": "exam_8th",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MBtmbrv0S4rEWPnl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.phno }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "number",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "09394eba-6af4-431c-9baa-8aa39ffbcc52"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d28b340c-2a2d-4b72-83a6-db854eeda5af",
+                    "leftValue": "={{ $json.phno }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "number",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -144,
+        816
+      ],
+      "id": "b02813da-02a9-473c-98d9-703993377a72",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1jnk9BXw8rAJdbD7lcoqSUTPzUg4fnNUNvV-xPTQNxcI",
+          "mode": "list",
+          "cachedResultName": "students_exam",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jnk9BXw8rAJdbD7lcoqSUTPzUg4fnNUNvV-xPTQNxcI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 339099742,
+          "mode": "list",
+          "cachedResultName": "9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jnk9BXw8rAJdbD7lcoqSUTPzUg4fnNUNvV-xPTQNxcI/edit#gid=339099742"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        816
+      ],
+      "id": "e4715c1e-330b-466f-8c9f-26de48bc1f7f",
+      "name": "exam_9th",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MBtmbrv0S4rEWPnl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1jnk9BXw8rAJdbD7lcoqSUTPzUg4fnNUNvV-xPTQNxcI",
+          "mode": "list",
+          "cachedResultName": "students_exam",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jnk9BXw8rAJdbD7lcoqSUTPzUg4fnNUNvV-xPTQNxcI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1583687670,
+          "mode": "list",
+          "cachedResultName": "10",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jnk9BXw8rAJdbD7lcoqSUTPzUg4fnNUNvV-xPTQNxcI/edit#gid=1583687670"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        192,
+        1040
+      ],
+      "id": "f9bf9b05-ea9f-4cf0-8eae-612734f7bd1a",
+      "name": "exam_10th",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MBtmbrv0S4rEWPnl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "919588327901763",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "=Dear student,\nYour upcoming exam on Saturday {{$node[\"Code in JavaScript\"].json.Date}} is:\nSubject: {{$node[\"Code in JavaScript\"].json.Subject}} \nCourse: {{ $json.Couse }}\n\nAll the best..",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        768
+      ],
+      "id": "30521e46-517c-4bfc-a6f1-bd8ae20c66b9",
+      "name": "Send message to 8th1",
+      "webhookId": "50fe546a-c389-49f6-bde2-f51aacd65861",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "Zt92IoFUxtbuc3Go",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4b7d69b1-de73-4368-ad88-6c9febe5d287",
+              "leftValue": "={{ $json.row_number }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1296,
+        272
+      ],
+      "id": "125c6c42-0993-49de-9e39-ceaab7247f20",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v22.0/919588327901763/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAVlT3aPWtMBQNWc6M50iC1m0VXHZCqZB5VnEdNEQYUZBYs74ArxRhZC0TZAmoxZBYPl2qfKMlNNcHM4VptugZBIaYrJpWoROYSDbkNoP1aX5Wz3cOwKHWrXwlVBhZA4clI3Fa0W15kNKPDCS6vceUENtkpwZA8ZCH4yHM7o7jm9lSqZAlhotZA10SgJbHazpoOF"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"status\": \"read\",\n  \"message_id\": \"{{ $json.messages[0].id }}\",\n  \"typing_indicator\": {\n    \"type\": \"text\"\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2144,
+        960
+      ],
+      "id": "bc98f7db-0657-458f-8220-145b6542777f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Use this in a Function node (or Code node)\nconst rows = $input.all();           // all incoming items\nif (rows.length === 0) return [];    // no rows -> nothing\nconst last = rows[rows.length - 1];  // pick last item\nreturn [ last ];                     // return a single item\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        688
+      ],
+      "id": "eed4c5cc-ffd1-40fb-a419-70ee3d515400",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "School Info": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "students_8th": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "homework_8th": {
+      "main": [
+        [
+          {
+            "node": "Send message to 8th",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "students_9th": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "students_10th": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "homework_9th": {
+      "main": [
+        [
+          {
+            "node": "Send message to 8th",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date&Time": {
+      "main": [
+        [
+          {
+            "node": "students_8th",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "students_9th",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "students_10th",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "homework_8th",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "homework_9th",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "exam_8th",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "exam_9th",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "exam_8th": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "exam_9th": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Date&Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send message to 8th1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message to 8th": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "68cc19d0-4cc2-45e7-879b-da3c3fceb706",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "187e41cb6ead9d3b8ddec3fc491a47c0cacbfcffe71067d5b16a4f0c998a6e18"
+  },
+  "id": "vS5zn0qtOzNQC7kM",
+  "tags": []
+}
