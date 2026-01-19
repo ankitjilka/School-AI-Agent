@@ -1,0 +1,284 @@
+{
+  "name": "Fees reminder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        464
+      ],
+      "id": "ac5671ba-c6de-4155-bb58-d22482d5ad4c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{$now}}",
+        "duration": 1,
+        "outputFieldName": "tomorrowDate",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        80
+      ],
+      "id": "191b1c5d-a57e-4ce9-8984-38a77b3091f8",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.tomorrowDate }}",
+        "format": "custom",
+        "customFormat": "dd/MM/yyyy",
+        "outputFieldName": "formattedTomorrowDate",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f8159b0a-b373-45ab-8a1e-406fa2cbe8c7",
+      "name": "Date & Time1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "451b44d9-f5bc-4157-852d-03a37672d41e",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        464
+      ],
+      "id": "ae4d1bcb-5265-4629-8f1c-b1bebfa24028",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "702334729640055",
+        "recipientPhoneNumber": "={{ $json.phno.toString() }}",
+        "textBody": "=Hello {{ $json.lastName }} {{ $json.surname }},\nThis is a gentle reminder that fees of ₹{{ $json.amount }} for Standard {{ $json.standard }}th are due on {{ $json.duedate }}. Kindly complete the payment at the school office.   \nRegards,   \nShree Mirambika School",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        448
+      ],
+      "id": "98bdaa44-4f8e-4008-bee9-938cc72a857f",
+      "name": "Send message",
+      "webhookId": "36c4dbfc-b147-4ddb-a3e9-1a0b104aac95",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "Zt92IoFUxtbuc3Go",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M",
+          "mode": "list",
+          "cachedResultName": "Students_data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "8",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        272
+      ],
+      "id": "9d5ee0a6-80c5-4c2a-ae9c-587b298bcf6e",
+      "name": "students_8th",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MBtmbrv0S4rEWPnl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M",
+          "mode": "list",
+          "cachedResultName": "Students_data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 564961239,
+          "mode": "list",
+          "cachedResultName": "9",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M/edit#gid=564961239"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        464
+      ],
+      "id": "fad106ef-f95d-4089-85da-afc100f81694",
+      "name": "students_9th",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MBtmbrv0S4rEWPnl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M",
+          "mode": "list",
+          "cachedResultName": "Students_data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1032706326,
+          "mode": "list",
+          "cachedResultName": "10",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/103uIpptOl2Y7et1Jkt0zhoLldfQkvxd9JyEe4X-zA8M/edit#gid=1032706326"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        384,
+        656
+      ],
+      "id": "f5228aae-b6e5-42f1-a4df-a758d01f8e22",
+      "name": "students_10th",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MBtmbrv0S4rEWPnl",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "students_8th",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "students_9th",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "students_10th",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "students_8th": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "students_10th": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ba6af003-0d48-49b3-abbc-e895f387a243",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "187e41cb6ead9d3b8ddec3fc491a47c0cacbfcffe71067d5b16a4f0c998a6e18"
+  },
+  "id": "u000n094hAVsMUGC",
+  "tags": []
+}
